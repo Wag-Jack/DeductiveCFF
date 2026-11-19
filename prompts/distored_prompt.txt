@@ -1,0 +1,17 @@
+Variables:
+!<INPUT 0>! - Context
+!<INPUT 1>! - Question
+!<INPUT 2>! - Options
+### Below I will give you a detective reasoning question, please summarize the key clues in this question based on the context, the options and choose the answer you think is correct. Note: When generating the answer, please only output the serial number of the option.
+### Context:
+!<INPUT 0>!
+### Question:
+!<INPUT 1>!
+### Options:
+!<INPUT 2>!
+Your output will contain the following:
+### Evidence: Please output what you consider to be the Evidence in the Context. Please note that the Evidence needs to be directly from the Context, i.e. it is a string originally in the Context that can be matched directly to the original text by string matching.
+### Answer: Please output only the serial numbers.
+Please follow the format below for your output:
+### Evidence: xxxxx
+### Answer: 1/2/3/4
