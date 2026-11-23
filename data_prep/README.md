@@ -17,6 +17,7 @@ Prompt templates for C / NC generation are the next step (see "Next steps").
 | Difficulty is only kept within a range (not a manipulated variable): no difficulty bins | Langhui, Nov 22 |
 | Split the 241 usable cases into **main 164 / filler 42 / drop 35** (`data/pool_roles.json`) | Langhui, Nov 22 (agreed to Claude's proposal) |
 | Keep all question types; tag each case with `question_type` and use type-specific distortion instructions at generation time | Langhui, Nov 22 |
+| Include a 4th advice type, **C-distorted** (correct answer, distorted evidence); generated with the same shared prompt as the other types. How to measure it is still open | Langhui, Nov 22 |
 
 ## What was done
 
@@ -112,8 +113,8 @@ it makes a wrong mechanism/explanation look supported (e.g. altering a physical 
 
 ## Open questions
 
-1. **4th advice type (correct answer + distorted evidence):** the progress-report goal mentions it, but it can only be
-   measured with a process measure (e.g. Verify-condition flags), since the final answer is correct either way.
+1. **How to measure C-distorted:** the final answer is correct either way, so it needs a process measure —
+   Verify-condition flags only, or an extra per-item question in all conditions (conflicts with one-question-per-case).
 2. **Option format:** keep 4 options and fix length leakage, or convert to binary with a length-matched distractor?
 
 ## Next steps
