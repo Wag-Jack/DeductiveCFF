@@ -1,23 +1,210 @@
- "use client";
-import {useState} from "react";
-type Opt={key:string;label:string;description?:string};type Ev={id:string;source:string;text:string};
-type Scenario={id:string;title:string;intro:string;background:string;evidence:Ev[];question:string;options:Opt[];condition:string;aiAdvice:string;aiRecommendation:string;aiConfidence:string;claims:string[]};
-type Screen="home"|"scenario"|"review"|"done";
-function shuffle<T,>(a:T[]){const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x;}
-export default function Home(){
- const [screen,setScreen]=useState<Screen>("home"),[scenarios,setScenarios]=useState<Scenario[]>([]),[order,setOrder]=useState<number[]>([]),[idx,setIdx]=useState(0),[pid,setPid]=useState(""),[initial,setInitial]=useState(""),[final,setFinal]=useState(""),[ic,setIc]=useState(55),[fc,setFc]=useState(55),[checks,setChecks]=useState<string[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState(""),[saved,setSaved]=useState(0);
- const s=scenarios[order[idx]],progress=screen==="home"?0:screen==="done"?100:Math.round(((idx+(screen==="review"?.7:.2))/Math.max(scenarios.length,1))*100);
- async function begin(){setBusy(true);setError("");const anonymousId=pid||`session-${crypto.randomUUID()}`;setPid(anonymousId);try{const r=await fetch("/api/scenarios",{cache:"no-store"}),d=await r.json();if(!r.ok)throw Error(d.error);if(!d.scenarios?.length)throw Error("Dataset tab is empty. Add at least one scenario.");setScenarios(d.scenarios);setOrder(shuffle(d.scenarios.map((_:Scenario,i:number)=>i)));setIdx(0);setSaved(0);setScreen("scenario");}catch(e){setError(e instanceof Error?e.message:"Could not load the scenario deck.");}finally{setBusy(false);}}
- function showAI(){if(!initial){setError("Choose your first take before the AI gets a microphone.");return;}setError("");setChecks([]);setFinal("");setScreen("review");}
- async function submit(){if(!final){setError("Pick your final answer before moving on.");return;}if(s.claims.length&&checks.some(x=>!x)){setError("Answer each evidence check, even if your answer is 'not sure'.");return;}setBusy(true);setError("");try{const r=await fetch("/api/responses",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({participantId:pid,scenarioId:s.id,scenarioOrder:idx+1,condition:s.condition,initialAnswer:initial,initialConfidence:ic,aiRecommendation:s.aiRecommendation,verificationResponses:checks,finalAnswer:final,finalConfidence:fc})}),d=await r.json();if(!r.ok)throw Error(d.error);setSaved(n=>n+1);if(idx+1<order.length){setIdx(n=>n+1);setInitial("");setFinal("");setIc(55);setFc(55);setChecks([]);setScreen("scenario");}else setScreen("done");}catch(e){setError(e instanceof Error?e.message:"Could not save.");}finally{setBusy(false);}}
- const options=(which:"initial"|"final",value:string,set:(v:string)=>void)=><div className="options">{s.options.map(o=><label className={`option ${value===o.key?"selected":""}`} key={o.key}><input type="radio" name={which} checked={value===o.key} onChange={()=>set(o.key)}/><i/><span><b>{o.label}</b><small>{o.description}</small></span></label>)}</div>;
- const slider=(label:string,value:number,set:(n:number)=>void)=><><div className="sliderHead"><label>{label}</label><b>{value}%</b></div><input className="range" type="range" min="0" max="100" step="5" value={value} onChange={e=>set(+e.target.value)}/><div className="rangeEnds"><span>PURE GUESSING</span><span>BET MY COFFEE</span></div></>;
- return <main className="shell"><header><a className="brand" href="#"><span>✳</span> DECISION<span className="green">LAB</span></a><div className="topmeta"><i/> DECISION-MAKING STUDY <b>BETA</b></div></header><div className="progress"><span style={{width:`${progress}%`}}/></div>
- {screen==="home"&&<section className="hero"><div className="heroText"><div className="eyebrow">✦ A short decision-making activity</div><h1>Take a look.<br/><em>Make the call.</em></h1><p className="lead">You’ll review a few everyday scenarios, consider the information provided, and make a decision. Take your time and use your own judgment.</p><div className="startrow"><button className="btn" onClick={begin} disabled={busy}>{busy?"Loading scenarios…":"Get started ↗"}</button><small>~10 min · a few short scenarios</small></div><small className="asterisk">There are no trick questions. We’re interested in your thought process.</small>{error&&<p className="error">{error}</p>}</div>
- <div className="art"><div className="orbit one"/><div className="orbit two"/><div className="sticker top">BIG DECISION ENERGY</div><div className="brain"><div className="brainbar">YOUR THINKING SPACE <span>● ● ●</span></div><div className="emoji">🧠</div><strong>“Let me<br/>think this through.”</strong><label>ONE STEP AT A TIME</label></div><div className="bubble"><small>✳ ANOTHER PERSPECTIVE</small><b>New information.</b><span>Consider the details</span></div><div className="sticker bottom">DETAILS MATTER ✦</div><div className="hmm">hmm…</div></div>
- <div className="steps"><div><b>01</b><span><strong>Make your call</strong><small>Start with your own judgment.</small></span></div><div><b>02</b><span><strong>Review the analysis</strong><small>Consider another perspective.</small></span></div><div><b>03</b><span><strong>Make your decision</strong><small>Choose the answer that fits best.</small></span></div></div></section>}
- {screen==="scenario"&&s&&<section className="study"><div className="studyhead"><div><div className="eyebrow">CASE FILE · {String(idx+1).padStart(2,"0")} / {scenarios.length}</div><h2>{s.title}</h2><p>{s.intro}</p></div><div className="stamp">EVIDENCE<br/>INSIDE</div></div><div className="panel"><div className="kicker">THE SITUATION</div><p>{s.background}</p><div className="receipts">THE RECEIPTS <small>EXHIBITS A–{String.fromCharCode(64+s.evidence.length)}</small></div><div className="evidence">{s.evidence.map((e,i)=><article key={i}><div><b>{e.id||`E${i+1}`}</b><small>{e.source}</small></div><p>{e.text}</p></article>)}</div></div><div className="panel"><div className="kicker">STEP 1 · YOUR INITIAL DECISION</div><h3>{s.question}</h3>{options("initial",initial,setInitial)}{slider("HOW SURE ARE YOU?",ic,setIc)}<div className="panelFoot"><small>Record your initial answer before reviewing the additional analysis.</small><button className="btn" onClick={showAI}>Lock it in →</button></div>{error&&<p className="error">{error}</p>}</div></section>}
- {screen==="review"&&s&&<section className="study"><div className="studyhead"><div><div className="eyebrow">STEP 2 · ADDITIONAL ANALYSIS</div><h2>Consider another perspective.</h2><p>Your initial answer: <b>{s.options.find(o=>o.key===initial)?.label}</b>. Review the analysis below, then decide what you think.</p></div><div className="stamp purple">ADDITIONAL<br/>ANALYSIS</div></div><div className="aiPanel"><div className="aihead"><span>✳</span><div><b>AI analysis</b><small>Additional perspective</small></div><label>{s.aiConfidence} CONFIDENCE</label></div><p>“{s.aiAdvice}”</p><div className="verdict"><small>RECOMMENDED OPTION</small><b>{s.options.find(o=>o.key===s.aiRecommendation)?.label||s.aiRecommendation}</b></div></div>{!!s.claims.length&&<div className="panel"><div className="kicker">REVIEW THE DETAILS</div><h3>How well do these statements reflect the information provided?</h3><p className="muted">For each statement, indicate whether it is accurately represented.</p>{s.claims.map((c,i)=><div className="claim" key={i}><div><small>CLAIM 0{i+1}</small><p>{c}</p></div><select value={checks[i]||""} onChange={e=>setChecks(prev=>{const n=[...prev];n[i]=e.target.value;return n;})}><option value="">Your verdict…</option><option>Accurately represented</option><option>Misrepresented</option><option>Unsure</option></select></div>)}</div>}<div className="panel"><div className="kicker">STEP 3 · YOUR FINAL DECISION</div><h3>What is your answer now?</h3>{options("final",final,setFinal)}{slider("HOW SURE ARE YOU NOW?",fc,setFc)}<div className="panelFoot"><small>Select the answer that best reflects your judgment.</small><button className="btn" onClick={submit} disabled={busy}>{busy?"Saving your take…":idx+1===scenarios.length?"Submit study":"Save & next case →"}</button></div>{error&&<p className="error">{error}</p>}</div></section>}
- {screen==="done"&&<section className="done"><div className="donebadge">ACTIVITY COMPLETE ✦</div><div className="doneemoji">🎉</div><div className="eyebrow">THANK YOU FOR PARTICIPATING</div><h1>All done.<br/><em>Thank you!</em></h1><p>Your responses have been saved. You can close this tab now.</p><div className="saved">{saved}<small>SCENARIO RESPONSES SAVED</small></div><div className="disclaimer">This is a research prototype using fictional sample scenarios. The sample AI advice is illustrative, not a validated experimental stimulus.</div></section>}
- <footer><span>DECISION LAB © 2026</span><span>THOUGHTFUL DECISIONS, ONE SCENARIO AT A TIME.</span><span>BUILT FOR CURIOUS MINDS ✳</span></footer></main>;
+"use client";
+
+import { useMemo, useState } from "react";
+
+type Choice = { key: string; label: string; description?: string };
+type Screen = "home" | "scenario" | "analysis" | "complete";
+
+const scenario = {
+  id: "1622",
+  title: "The Train Station Incident",
+  intro: "Read the situation and use the information provided to answer the question.",
+  background:
+    "On a cold winter night, a robbery disrupted the waiting room at a train station. The guard immediately rushed out to pursue the culprit, but because of the dim night and the snowstorm, he could not clearly see the robber's face. When the guard reached the platform, he found six people there: a middle-aged man arguing with staff about a delay; an elderly man watching the argument; a young man reading a newspaper that almost covered his face; a person in sportswear jogging on the spot to keep warm; an anxious passenger checking a watch; and a person sitting in a heavy coat, shivering. After observing them, the guard pointed to one person.",
+  evidence: [
+    { id: "E1", source: "Situation", text: "The guard immediately rushed out to pursue the culprit." },
+    { id: "E2", source: "Platform observation", text: "The fourth person was dressed in sportswear, jogging on the spot to keep warm." },
+    { id: "E3", source: "Platform observation", text: "The sixth person was wrapped in a heavy coat, sitting and shivering while rubbing his hands together." },
+  ],
+  question: "Who is the guard pointing to?",
+  options: [
+    { key: "A", label: "The first person who was arguing with the staff." },
+    { key: "B", label: "The second person who was watching the argument." },
+    { key: "C", label: "The third person who was engrossed in reading his newspaper." },
+    { key: "D", label: "The fourth person who was jogging on the spot." },
+  ] as Choice[],
+  analysis:
+    "The robber had just fled at a run, so whoever he was would still be breathing hard and flushed when the guard arrived. Jogging on the spot is the one activity that explains away that exertion in plain sight. The sixth man, still shivering in his coat, shows how cold the platform was for anyone who had been standing still, which the fourth man had not.",
+  recommendation: "D",
+};
+
+export default function Home() {
+  const [screen, setScreen] = useState<Screen>("home");
+  const [initial, setInitial] = useState("");
+  const [final, setFinal] = useState("");
+  const [initialConfidence, setInitialConfidence] = useState(55);
+  const [finalConfidence, setFinalConfidence] = useState(55);
+  const [reviewed, setReviewed] = useState(false);
+
+  const initialLabel = useMemo(
+    () => scenario.options.find((o) => o.key === initial)?.label,
+    [initial]
+  );
+  const finalLabel = useMemo(
+    () => scenario.options.find((o) => o.key === final)?.label,
+    [final]
+  );
+
+  function reset() {
+    setScreen("home");
+    setInitial("");
+    setFinal("");
+    setInitialConfidence(55);
+    setFinalConfidence(55);
+    setReviewed(false);
+  }
+
+  function choices(value: string, onChange: (value: string) => void, name: string) {
+    return (
+      <div className="options">
+        {scenario.options.map((option) => (
+          <label className={`option ${value === option.key ? "selected" : ""}`} key={option.key}>
+            <input
+              type="radio"
+              name={name}
+              value={option.key}
+              checked={value === option.key}
+              onChange={() => onChange(option.key)}
+            />
+            <i />
+            <span>
+              <b>{option.key}. {option.label}</b>
+            </span>
+          </label>
+        ))}
+      </div>
+    );
+  }
+
+  function confidence(label: string, value: number, onChange: (n: number) => void) {
+    return (
+      <div className="confidence">
+        <div className="sliderHead">
+          <label>{label}</label>
+          <b>{value}%</b>
+        </div>
+        <input
+          className="range"
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+        />
+        <div className="rangeEnds"><span>NOT VERY SURE</span><span>VERY SURE</span></div>
+      </div>
+    );
+  }
+
+  return (
+    <main className="shell">
+      <header>
+        <a className="brand" href="#" onClick={(e) => { e.preventDefault(); reset(); }}>
+          <span>✳</span> DECISION<span className="green">LAB</span>
+        </a>
+        <div className="topmeta"><i /> DECISION-MAKING ACTIVITY</div>
+      </header>
+
+      <div className="progress"><span style={{ width: screen === "home" ? "0%" : screen === "complete" ? "100%" : screen === "analysis" ? "72%" : "35%" }} /></div>
+
+      {screen === "home" && (
+        <section className="hero">
+          <div className="heroText">
+            <div className="eyebrow">✦ A short decision-making activity</div>
+            <h1>Take a look.<br /><em>Make the call.</em></h1>
+            <p className="lead">You’ll review a situation, consider the information provided, and make a decision. Take your time and use your own judgment.</p>
+            <div className="startrow">
+              <button className="btn" onClick={() => setScreen("scenario")}>Get started ↗</button>
+              <small>~5 min · one scenario</small>
+            </div>
+            <small className="asterisk">Please read the situation carefully before answering.</small>
+          </div>
+          <div className="art">
+            <div className="orbit one" /><div className="orbit two" />
+            <div className="sticker top">A MOMENT TO THINK</div>
+            <div className="brain">
+              <div className="brainbar">YOUR THINKING SPACE <span>● ● ●</span></div>
+              <div className="emoji">🧠</div>
+              <strong>“Let me<br />think this through.”</strong>
+              <label>ONE STEP AT A TIME</label>
+            </div>
+            <div className="bubble"><small>✳ ANOTHER PERSPECTIVE</small><b>New information.</b><span>Consider the details</span></div>
+            <div className="sticker bottom">DETAILS MATTER ✦</div>
+            <div className="hmm">hmm…</div>
+          </div>
+          <div className="steps">
+            <div><b>01</b><span><strong>Review the situation</strong><small>Read the context and evidence.</small></span></div>
+            <div><b>02</b><span><strong>Consider an analysis</strong><small>Review an additional perspective.</small></span></div>
+            <div><b>03</b><span><strong>Make your decision</strong><small>Choose the answer that fits best.</small></span></div>
+          </div>
+        </section>
+      )}
+
+      {screen === "scenario" && (
+        <section className="study">
+          <div className="studyhead">
+            <div><div className="eyebrow">CASE FILE · 01 / 01</div><h2>{scenario.title}</h2><p>{scenario.intro}</p></div>
+            <div className="stamp">CASE<br />1622</div>
+          </div>
+          <div className="panel">
+            <div className="kicker">THE SITUATION</div>
+            <p>{scenario.background}</p>
+            <div className="receipts">INFORMATION PROVIDED <small>3 DETAILS</small></div>
+            <div className="evidence">
+              {scenario.evidence.map((item) => (
+                <article key={item.id}><div><b>{item.id}</b><small>{item.source}</small></div><p>{item.text}</p></article>
+              ))}
+            </div>
+          </div>
+          <div className="panel">
+            <div className="kicker">STEP 1 · YOUR INITIAL DECISION</div>
+            <h3>{scenario.question}</h3>
+            {choices(initial, setInitial, "initial")}
+            {confidence("HOW SURE ARE YOU?", initialConfidence, setInitialConfidence)}
+            <div className="panelFoot"><small>Your first answer will be recorded before you see the additional analysis.</small><button className="btn" disabled={!initial} onClick={() => setScreen("analysis")}>Continue →</button></div>
+          </div>
+        </section>
+      )}
+
+      {screen === "analysis" && (
+        <section className="study">
+          <div className="studyhead">
+            <div><div className="eyebrow">STEP 2 · ADDITIONAL ANALYSIS</div><h2>Consider another perspective.</h2><p>Your initial answer: <b>{initial}. {initialLabel}</b></p></div>
+            <div className="stamp purple">ANALYSIS<br />02</div>
+          </div>
+          <div className="aiPanel">
+            <div className="aihead"><span>✳</span><div><b>Additional analysis</b><small>Another perspective on the situation</small></div></div>
+            <p>“{scenario.analysis}”</p>
+            <div className="verdict"><small>RECOMMENDED OPTION</small><b>{scenario.recommendation}. {scenario.options.find((o) => o.key === scenario.recommendation)?.label}</b></div>
+          </div>
+          <div className="panel">
+            <div className="kicker">STEP 3 · YOUR FINAL DECISION</div>
+            <h3>What is your answer now?</h3>
+            {choices(final, setFinal, "final")}
+            {confidence("HOW SURE ARE YOU NOW?", finalConfidence, setFinalConfidence)}
+            <div className="panelFoot"><small>Choose the answer that best reflects your judgment after reviewing the information.</small><button className="btn" disabled={!final} onClick={() => setScreen("complete")}>Finish activity ↗</button></div>
+          </div>
+        </section>
+      )}
+
+      {screen === "complete" && (
+        <section className="done">
+          <div className="donebadge">ACTIVITY COMPLETE ✦</div>
+          <div className="doneemoji">🎉</div>
+          <div className="eyebrow">THANK YOU FOR PARTICIPATING</div>
+          <h1>All done.<br /><em>Thank you!</em></h1>
+          <p>Your responses have been recorded for this local preview only.</p>
+          <div className="summary">
+            <div><small>INITIAL ANSWER</small><b>{initial || "—"}</b><span>{initialLabel || "Not selected"}</span></div>
+            <div><small>FINAL ANSWER</small><b>{final || "—"}</b><span>{finalLabel || "Not selected"}</span></div>
+          </div>
+          <div className="disclaimer">This is a local UI preview using one sample case. Responses are held only in this browser session and are not sent to Google Sheets or saved to a research database.</div>
+          <button className="btn" onClick={reset}>Return to start ↺</button>
+        </section>
+      )}
+
+      <footer><span>DECISION LAB © 2026</span><span>THOUGHTFUL DECISIONS, ONE SCENARIO AT A TIME.</span><span>BUILT FOR CURIOUS MINDS ✳</span></footer>
+    </main>
+  );
 }
