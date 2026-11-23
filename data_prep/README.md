@@ -14,6 +14,8 @@ Prompt templates for C / NC generation are the next step (see "Next steps").
 | Pre-generate **every** advice type for **every** selected case; participant count, items per person and type ratios are decided later at assignment time | Langhui, Nov 22 |
 | Classify cases by difficulty before writing prompts | Langhui, Nov 22 |
 | Start from the full 1,625-case 1–3 arrow subset, not a keyword-filtered whodunit subset | Langhui, Nov 22 |
+| Difficulty is only kept within a range (not a manipulated variable): no difficulty bins | Langhui, Nov 22 |
+| Split the 241 usable cases into **main 164 / filler 42 / drop 35** (`data/pool_roles.json`) | Langhui, Nov 22 (agreed to Claude's proposal) |
 
 ## What was done
 
@@ -90,18 +92,27 @@ several equally valid options, translation artifacts, duplicates).
 Filtering labels are trustworthy; stratification labels (difficulty, explicitness, distractor) are moderate —
 use them for coarse bins and calibrate with a no-AI pilot.
 
+### Difficulty range control → main / filler / drop
+
+| role | rule | n | use |
+|---|---|---|---|
+| filler | est_difficulty = 1 **and** key evidence explicit | 42 | not in the main analysis; candidates for attention checks (obviously wrong AI advice) and for calibrating trust in the AI. Generate all advice types for these too. |
+| drop | est_difficulty = 3, **or** distractor_plausibility = 1 (an NC argument for it can't persuade anyone) | 35 | excluded |
+| main | everything else | 164 | main item pool |
+
+Both ends use two signals because each label alone is only moderately reliable. Still to be checked with a no-AI pilot:
+drop items whose unassisted accuracy is near 100% or near chance.
+
 ## Open questions
 
-1. **Difficulty bins:** est_difficulty only (98 vs 143), explicitness only (92 vs 149), or cases where both agree
-   (easy+explicit 42 vs medium+implicit 110)?
-2. **Question types:** only 30 "who" cases. Are how/why cases OK? Distortions read differently for "who did it" vs "how was it done".
-3. **4th advice type (correct answer + distorted evidence):** the progress-report goal mentions it, but it can only be
+1. **Question types:** only 30 "who" cases. Are how/why cases OK? Distortions read differently for "who did it" vs "how was it done".
+2. **4th advice type (correct answer + distorted evidence):** the progress-report goal mentions it, but it can only be
    measured with a process measure (e.g. Verify-condition flags), since the final answer is correct either way.
-4. **Option format:** keep 4 options and fix length leakage, or convert to binary with a length-matched distractor?
+3. **Option format:** keep 4 options and fix length leakage, or convert to binary with a length-matched distractor?
 
 ## Next steps
 
-- Pick difficulty bins → sample a handful of cases per bin.
+- Sample a handful of `main` cases for the first prompt drafts.
 - Write one shared prompt skeleton for C-faithful / NC-faithful / NC-distorted × {fabricated, altered detail, out of context}
   starting from `prompts/naive_prompt.txt`.
 - Automatic checks: faithful quotes match the context by string match; distorted versions change exactly the targeted evidence.
@@ -113,7 +124,7 @@ use them for coarse bins and calibrate with a no-AI pilot.
 python data_prep/scripts/pipeline.py fetch   # DetectBench -> data_prep/raw/ (gitignored)
 python data_prep/scripts/pipeline.py build   # 1,625 candidates
 python data_prep/scripts/pipeline.py check   # label coverage + agreement table
-python data_prep/scripts/pipeline.py pool    # 241 usable ids (+ raw/usable_pool.jsonl with full cases)
+python data_prep/scripts/pipeline.py pool    # 241 usable ids + main/filler/drop roles (+ raw/usable_pool.jsonl with full cases)
 python data_prep/scripts/pipeline.py stats   # tables above
 ```
 
@@ -126,6 +137,7 @@ python data_prep/scripts/pipeline.py stats   # tables above
 | `data/labels_1625.jsonl` | our labels for all 1,625 candidates (keyed by DetectBench `id`) |
 | `data/agreement_100.labels.jsonl`, `data/agreement_100_ids.json` | independent relabel sample |
 | `data/usable_pool_ids.json` | the 241 usable ids |
+| `data/pool_roles.json` | main / filler / drop split of those ids |
 | `scripts/pipeline.py` | everything above, end to end |
 
 **License note:** the DetectBench repo has no license, so this branch commits only our labels and ids, not the case text.

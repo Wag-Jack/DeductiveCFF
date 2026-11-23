@@ -131,14 +131,29 @@ def usable(c, v):
             and not v["needs_external_knowledge"] and v["distortable"])
 
 
+def role(v):
+    """Difficulty range control (decided Nov 22): difficulty is not a manipulated variable.
+    filler = easy + key evidence explicit (kept separately, e.g. attention checks / trust calibration)
+    drop   = hard, or obviously wrong distractor
+    main   = everything else"""
+    if v["est_difficulty"] == 1 and v["key_evidence_explicitness"] == "explicit":
+        return "filler"
+    if v["est_difficulty"] == 3 or v["distractor_plausibility"] == 1:
+        return "drop"
+    return "main"
+
+
 def pool():
     cand, lab = load()
     ids = [i for i in cand if usable(cand[i], lab[i])]
     json.dump(ids, open(DATA / "usable_pool_ids.json", "w"))
+    roles = {i: role(lab[i]) for i in ids}
+    json.dump({r: [i for i in ids if roles[i] == r] for r in ("main", "filler", "drop")},
+              open(DATA / "pool_roles.json", "w"), indent=1)
     write_jsonl(RAW / "usable_pool.jsonl",
-                [dict(source_id=i, labels=lab[i], reasoning_arrows=cand[i]["reasoning_arrows"],
+                [dict(source_id=i, role=roles[i], labels=lab[i], reasoning_arrows=cand[i]["reasoning_arrows"],
                       context_words=cand[i]["context_words"], source_case=cand[i]["source_case"]) for i in ids])
-    print("usable pool:", len(ids))
+    print("usable pool:", len(ids), "| roles:", dict(C(roles.values())))
 
 
 def stats():
