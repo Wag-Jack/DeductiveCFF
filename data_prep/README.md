@@ -17,6 +17,7 @@ Prompt templates for C / NC generation are the next step (see "Next steps").
 | Difficulty is only kept within a range (not a manipulated variable): no difficulty bins | Langhui, Nov 22 |
 | Split the 241 usable cases into **main 164 / filler 42 / drop 35** (`data/pool_roles.json`) | Langhui, Nov 22 (agreed to Claude's proposal) |
 | Keep all question types; tag each case with `question_type` and use type-specific distortion instructions at generation time | Langhui, Nov 22 |
+| NC target / distractor: two-step — 3-LLM vote now (`data/distractor_votes.jsonl`); replace with the human most-chosen wrong option after the no-AI pilot if they differ | Langhui, Nov 22 |
 | Include a 4th advice type, **C-distorted** (correct answer, distorted evidence); generated with the same shared prompt as the other types. How to measure it is still open | Langhui, Nov 22 |
 
 ## What was done
@@ -111,6 +112,20 @@ Question types in `main`: how/why 124 · who 23 · what-fact 15 · other 2 (fill
 Distortion prompts need a variant per type: for *who* the distortion shifts blame to another person; for *how/why*
 it makes a wrong mechanism/explanation look supported (e.g. altering a physical detail or the order of actions).
 
+### Distractor vote (main + filler, 206 cases)
+
+Three independent agents (spec: [`labeling/DISTRACTOR_VOTE_SPEC.md`](labeling/DISTRACTOR_VOTE_SPEC.md)) each picked the most
+tempting wrong option and a runner-up. Majority wins; a 3-way split is broken by runner-up points (2 for first pick, 1 for runner-up).
+
+| agreement | main | filler |
+|---|---|---|
+| 3/3 | 127 | 36 |
+| 2/3 | 37 | 5 |
+| split | 0 | 1 (id 2893) |
+
+The vote winner matches the first labeling pass's `strongest_distractor` in 179 / 206. Four `main` cases have
+mean plausibility < 1.5 — worth a look before generation.
+
 ## Open questions
 
 1. **How to measure C-distorted:** the final answer is correct either way, so it needs a process measure —
@@ -145,6 +160,7 @@ python data_prep/scripts/pipeline.py stats   # tables above
 | `data/agreement_100.labels.jsonl`, `data/agreement_100_ids.json` | independent relabel sample |
 | `data/usable_pool_ids.json` | the 241 usable ids |
 | `data/pool_roles.json` | main / filler / drop split of those ids |
+| `data/distractor_votes.jsonl` | 3-voter distractor vote for main + filler (winner, agreement, votes, runner-ups, reasons) |
 | `scripts/pipeline.py` | everything above, end to end |
 
 **License note:** the DetectBench repo has no license, so this branch commits only our labels and ids, not the case text.
