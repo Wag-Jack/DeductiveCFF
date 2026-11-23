@@ -116,9 +116,11 @@ Reasoning must follow soundly from the evidence as you present it.
 - N_EVIDENCE = 3
 - WORD_MIN–WORD_MAX = 50–80 (reasoning)
 
+- No AI confidence value is generated: in the Confidence condition the **participant** rates their own confidence
+  (Langhui, Nov 22; the progress report's wording "AI analysis is followed by a confidence value" should be updated)
+
 ## Open parameters (to decide)
 
-- Whether the AI analysis also shows a confidence value (Confidence condition) — generate separately or as part of output?
 - What C-distorted manipulates: Langhui leans toward the inference rather than the evidence (still thinking). If so it becomes
   correct answer + faithful evidence + flawed reasoning, mirroring NC-faithful
 - Option format (parked) only changes how {OPTIONS} is rendered
