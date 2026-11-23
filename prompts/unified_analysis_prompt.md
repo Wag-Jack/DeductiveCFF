@@ -127,3 +127,13 @@ Reasoning must follow soundly from the evidence as you present it.
 - What C-distorted manipulates: Langhui leans toward the inference rather than the evidence (still thinking). If so it becomes
   correct answer + faithful evidence + flawed reasoning, mirroring NC-faithful
 - Option format (parked) only changes how {OPTIONS} is rendered
+
+## v0 trial (Nov 22): 3 cases × 8 types, Claude subagents
+
+- Cases 1622 (who), 1414 (how/why), 719 (what-fact); outputs kept locally in `data_prep/raw/samples/` (contain case text).
+- `data_prep/scripts/check_analyses.py`: 24/24 pass the mechanical checks; reasoning 57–68 words.
+- **Weak spot: ooc.** All three generators said ooc was the hardest to make convincing — contexts often have no qualifier
+  whose removal points to the target, so they fell back on reframing. ooc versions share 2–3 of 3 quotes with the
+  faithful version of the same answer; in 1622 NC-ooc and NC-faithful quote the *same* three sentences and differ only
+  in interpretation, i.e. ooc collapses toward NC-faithful.
+- Fabricated / altered changes are single, local and checkable against the context (e.g. "jogging" → "standing").
