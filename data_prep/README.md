@@ -16,6 +16,7 @@ Prompt templates for C / NC generation are the next step (see "Next steps").
 | Start from the full 1,625-case 1–3 arrow subset, not a keyword-filtered whodunit subset | Langhui, Nov 22 |
 | Difficulty is only kept within a range (not a manipulated variable): no difficulty bins | Langhui, Nov 22 |
 | Split the 241 usable cases into **main 164 / filler 42 / drop 35** (`data/pool_roles.json`) | Langhui, Nov 22 (agreed to Claude's proposal) |
+| Keep all question types; tag each case with `question_type` and use type-specific distortion instructions at generation time | Langhui, Nov 22 |
 
 ## What was done
 
@@ -103,18 +104,23 @@ use them for coarse bins and calibrate with a no-AI pilot.
 Both ends use two signals because each label alone is only moderately reliable. Still to be checked with a no-AI pilot:
 drop items whose unassisted accuracy is near 100% or near chance.
 
+### Question types
+
+Question types in `main`: how/why 124 · who 23 · what-fact 15 · other 2 (filler: how/why 38 · who 3 · what-fact 1).
+Distortion prompts need a variant per type: for *who* the distortion shifts blame to another person; for *how/why*
+it makes a wrong mechanism/explanation look supported (e.g. altering a physical detail or the order of actions).
+
 ## Open questions
 
-1. **Question types:** only 30 "who" cases. Are how/why cases OK? Distortions read differently for "who did it" vs "how was it done".
-2. **4th advice type (correct answer + distorted evidence):** the progress-report goal mentions it, but it can only be
+1. **4th advice type (correct answer + distorted evidence):** the progress-report goal mentions it, but it can only be
    measured with a process measure (e.g. Verify-condition flags), since the final answer is correct either way.
-3. **Option format:** keep 4 options and fix length leakage, or convert to binary with a length-matched distractor?
+2. **Option format:** keep 4 options and fix length leakage, or convert to binary with a length-matched distractor?
 
 ## Next steps
 
 - Sample a handful of `main` cases for the first prompt drafts.
 - Write one shared prompt skeleton for C-faithful / NC-faithful / NC-distorted × {fabricated, altered detail, out of context}
-  starting from `prompts/naive_prompt.txt`.
+  starting from `prompts/naive_prompt.txt`, with a who vs how/why variant of the distortion instruction.
 - Automatic checks: faithful quotes match the context by string match; distorted versions change exactly the targeted evidence.
 - "Giving too much away" check: style-blind test (can a judge tell which analysis is distorted without the case?).
 
