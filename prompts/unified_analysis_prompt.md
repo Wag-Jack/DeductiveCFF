@@ -12,6 +12,9 @@ One prompt skeleton generates every advice type, so that all versions of a case 
 | NC-distorted:{fabricated, altered, ooc} | voted distractor | exactly one item distorted, rest verbatim | sound *given* the distorted item |
 | C-distorted:{fabricated, altered, ooc} | correct answer | exactly one item distorted, rest verbatim | sound *given* the distorted item |
 
+C-distorted is generated for the item bank only, not used in the main experiment (Langhui, Nov 22).
+An alternative definition — correct answer + verbatim evidence + flawed reasoning (mirror of NC-faithful) — is still under consideration.
+
 Distortions (from the progress report):
 - **fabricated** — the item is modified so it changes the meaning of the story
 - **altered** — a small detail is changed (time, place, number, who did what)

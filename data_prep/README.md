@@ -19,6 +19,7 @@ Prompt templates for C / NC generation are the next step (see "Next steps").
 | Keep all question types; tag each case with `question_type` and use type-specific distortion instructions at generation time | Langhui, Nov 22 |
 | NC target / distractor: two-step — 3-LLM vote now (`data/distractor_votes.jsonl`); replace with the human most-chosen wrong option after the no-AI pilot if they differ | Langhui, Nov 22 |
 | Include a 4th advice type, **C-distorted** (correct answer, distorted evidence); generated with the same shared prompt as the other types. How to measure it is still open | Langhui, Nov 22 |
+| C-distorted is generated and kept in the item bank but **not used in the main experiment** for now (it can't be measured by final answer, and it would take trials from the main comparison). Whether to use it, and whether it manipulates evidence or reasoning, is for the group / Serena | Langhui, Nov 22 (refines the line above) |
 
 ## What was done
 
