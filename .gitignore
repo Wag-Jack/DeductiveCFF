@@ -1,3 +1,5 @@
 .DS_Store
 env
 __pycache__
+# data_prep: DetectBench content is regenerated locally (no upstream license)
+data_prep/raw/
