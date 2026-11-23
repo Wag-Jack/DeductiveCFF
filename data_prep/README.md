@@ -130,7 +130,11 @@ mean plausibility < 1.5 — worth a look before generation.
 
 1. **How to measure C-distorted:** the final answer is correct either way, so it needs a process measure —
    Verify-condition flags only, or an extra per-item question in all conditions (conflicts with one-question-per-case).
-2. **Option format:** keep 4 options and fix length leakage, or convert to binary with a length-matched distractor?
+2. **Option format (parked Nov 22):** 4-way vs binary (correct + voted distractor) vs 4-way display with AI arguing one distractor.
+   Length leakage remains in either format — `main`: correct option is longest in 88/164 (4-way, chance 25%) and longer than
+   the voted distractor in 100/164 (binary, chance 50%; 20 ties) — so options need length-matched rewrites regardless.
+   Binary: cleanest follow/not-follow metric, 2 options to rewrite, but 50% guess floor and easier items (filler/drop cutoffs may move).
+   4-way: comparable to the paper's human baseline, wider range, 4 options to rewrite.
 
 ## Next steps
 
