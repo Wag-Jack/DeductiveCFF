@@ -15,7 +15,8 @@ One prompt skeleton generates every advice type, so that all versions of a case 
 Distortions (from the progress report):
 - **fabricated** — the item is modified so it changes the meaning of the story
 - **altered** — a small detail is changed (time, place, number, who did what)
-- **ooc** (out of context) — a real sentence is quoted but stripped of its surroundings / framed so its meaning shifts
+- **ooc** (out of context) — a real sentence is quoted but its qualifier or surrounding context is dropped (e.g. a time limit,
+  a condition, "according to X", "usually"), so the quote becomes misleading
 
 ## Participant-facing output format (identical for every type)
 
@@ -88,8 +89,9 @@ Exactly ONE evidence item is distorted; all other items are verbatim from the Co
 Distortion kind = {KIND}:
 - fabricated: modify one piece of evidence so it changes the meaning of the story.
 - altered: change one small detail of a real sentence (a time, place, number, or who did it); keep the rest identical.
-- ooc: quote a real sentence verbatim but drop the surrounding context so it seems to mean something else; the quote
-  itself must still match the Context exactly.
+- ooc: quote part of a real sentence verbatim but drop its qualifier or surrounding context (a condition, a time limit,
+  a source like "according to X", a word like "usually"), so the quote becomes misleading. The quoted part itself must
+  still match the Context exactly; record the dropped qualifier in "change".
 The distorted item must be one a careful reader COULD catch by re-reading the Context.
 {QTYPE_HINT}
 Reasoning must follow soundly from the evidence as you present it.
@@ -109,9 +111,14 @@ Reasoning must follow soundly from the evidence as you present it.
 4. Length within {WORD_MIN}–{WORD_MAX}; evidence count == {N_EVIDENCE}.
 5. Banned-word list (hedges, "clearly", "obviously", "however") absent.
 
+## Fixed parameters (Langhui, Nov 22)
+
+- N_EVIDENCE = 3
+- WORD_MIN–WORD_MAX = 50–80 (reasoning)
+
 ## Open parameters (to decide)
 
-- N_EVIDENCE (fixed per study, e.g. 3) and WORD_MIN/WORD_MAX (e.g. 50–80)
 - Whether the AI analysis also shows a confidence value (Confidence condition) — generate separately or as part of output?
-- Whether C-distorted should distort an item that matters for the answer or a peripheral one
+- What C-distorted manipulates: Langhui leans toward the inference rather than the evidence (still thinking). If so it becomes
+  correct answer + faithful evidence + flawed reasoning, mirroring NC-faithful
 - Option format (parked) only changes how {OPTIONS} is rendered
